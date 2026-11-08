@@ -1,1 +1,39 @@
 
+
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: poc-dev-services
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions:
+    - missingkey=error
+
+  generators:
+    - git:
+        repoURL: https://github.com/obadh-20/gitops-infrastructure-poc.git
+        revision: main
+        directories:
+          - path: apps/*/overlays/dev
+
+  template:
+    metadata:
+      name: 'poc-{{index .path.segments 1}}-dev'
+    spec:
+      project: poc
+
+      source:
+        repoURL: https://github.com/obadh-20/gitops-infrastructure-poc.git
+        targetRevision: main
+        path: '{{.path.path}}'
+
+      destination:
+        server: https://100.85.97.78:6550
+        namespace: gitops-poc-dev
+
+      syncPolicy:
+        automated:
+          enabled: true
+          prune: false
+          selfHeal: false
